@@ -68,6 +68,19 @@ export default function EditEventScreen() {
     router.push('/');
   };
 
+const excluirEvento = async () => {
+
+  const eventosJSON = await AsyncStorage.getItem('eventos');
+  const eventos = eventosJSON ? JSON.parse(eventosJSON) : [];
+
+  const eventosFiltrados = eventos.filter((e: any) => e.id !== id);
+
+  await AsyncStorage.setItem('eventos', JSON.stringify(eventosFiltrados));
+
+  router.push('/');
+};
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Editar Evento</Text>
@@ -130,7 +143,7 @@ export default function EditEventScreen() {
         <Text style={styles.buttonText}>Alterar Dados</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.deleteButton} onPress={() => { /* deletar depois */ }}>
+      <TouchableOpacity style={styles.deleteButton} onPress={excluirEvento}>
         <Text style={styles.buttonText}>Excluir</Text>
       </TouchableOpacity>
     </View>

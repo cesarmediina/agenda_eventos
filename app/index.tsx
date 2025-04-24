@@ -35,7 +35,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Rock It</Text>
-      <Text style={styles.subtitle}>Upcoming Events</Text>
+      <Text style={styles.subtitle}>Próximos Eventos</Text>
 
       <FlatList
         data={eventos}
@@ -60,7 +60,7 @@ export default function HomeScreen() {
       />
 
     <Link href="/add_event" style={styles.addButton}>
-        <Text style={styles.addButtonText}>+ Add New Event</Text>
+        <Text style={styles.addButtonText}> + Adicionar Evento</Text>
       </Link>
     </View>
   );
