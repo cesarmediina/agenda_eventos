@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Link } from 'expo-router';
@@ -16,6 +17,7 @@ interface Evento {
 export default function HomeScreen() {
 
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [showMessage, setShowMessage] = useState(true); // Estado para controlar a exibição da mensagem
 
   useFocusEffect(
     useCallback(() => {
@@ -24,6 +26,11 @@ export default function HomeScreen() {
           const eventosJSON = await AsyncStorage.getItem('eventos');
           const eventosSalvos = eventosJSON ? JSON.parse(eventosJSON) : [];
           setEventos(eventosSalvos);
+
+          // Se já existir algum evento, esconder a mensagem
+          if (eventosSalvos.length > 0) {
+            setShowMessage(false);
+          }
         } catch (error) {
           console.error('Erro ao carregar eventos:', error);
         }
@@ -34,8 +41,13 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+
       <Text style={styles.title}>Rock It</Text>
       <Text style={styles.subtitle}>Próximos Eventos</Text>
+
+      {showMessage && (
+        <Text style={styles.welcomeMessage}>Nenhum evento? Vamos mudar isso!</Text> // Frase com emoji
+      )}
 
       <FlatList
         data={eventos}
@@ -54,13 +66,12 @@ export default function HomeScreen() {
             >
               <Feather name="edit" size={24} color="#333" style={styles.editIcon} />
             </Link>
-            
           </View>
         )}
       />
 
-    <Link href="/add_event" style={styles.addButton}>
-        <Text style={styles.addButtonText}> + Adicionar Evento</Text>
+      <Link href="/add_event" style={styles.addButton}>
+        <Text style={styles.addButtonText}>+ Adicionar Evento</Text>
       </Link>
     </View>
   );
@@ -85,6 +96,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#555',
   },
+  welcomeMessage: {
+    fontSize: 18,
+    color: '#444',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 200,
+    fontWeight: '500',
+    opacity: 0.8,
+  },
+  
   eventList: {
     flex: 1,
   },
