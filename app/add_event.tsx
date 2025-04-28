@@ -95,13 +95,13 @@ export default function AddEventScreen() {
             [data]: { selected: true, selectedColor: 'blue', selectedTextColor: 'white' },
           }}
           onDayPress={(day: { dateString: string }) => {
-            const dataSelecionada = new Date(day.dateString);
+            const dataSelecionada = new Date(day.dateString + 'T12:00:00');
           
             const dataFormatada = new Intl.DateTimeFormat('pt-BR', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+              weekday: 'long',  
+              day: '2-digit',  
+              month: '2-digit',
+              year: 'numeric',  
             }).format(dataSelecionada);
           
             const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
