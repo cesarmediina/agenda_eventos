@@ -42,8 +42,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
 
-      <Text style={styles.title}>Rock It</Text>
-      <Text style={styles.subtitle}>Próximos Eventos</Text>
+      <Text style={styles.title}>ROCK IT</Text>
+      <Text style={styles.subtitle}>próximos eventos</Text>
 
       {showMessage && (
         <Text style={styles.welcomeMessage}>Nenhum evento? Vamos mudar isso!</Text> // Frase com emoji
@@ -147,9 +147,10 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: '#000',
-    paddingVertical: 15,
+    paddingVertical: 20,
     borderRadius: 10,
     marginTop: 50,
+    marginBottom: 30,
   },
   addButtonText: {
     color: '#fff',

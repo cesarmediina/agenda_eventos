@@ -59,7 +59,7 @@ export default function AddEventScreen() {
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
       
-      <Text style={styles.title}>Rock It</Text>
+      <Text style={styles.title}>ROCK IT</Text>
 
       <Text style={styles.label}>Nome do Evento</Text>
       <TextInput
