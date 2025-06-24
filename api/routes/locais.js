@@ -1,6 +1,5 @@
-// Arquivo: api/routes/locais.js
-
 const express = require('express');
+
 const router = express.Router(); // Em vez de app, usamos o Router do Express
 const pool = require('../db');   // Importamos a conexão do nosso novo arquivo db.js
 
