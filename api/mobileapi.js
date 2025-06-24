@@ -4,7 +4,7 @@ const app = express();
 
 app.use(express.json());
 
-const FILE_PATH = './api/locais.json';
+const FILE_PATH = './locais.json';
 
 function lerLocais() {
   try {
