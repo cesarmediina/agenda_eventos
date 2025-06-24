@@ -1,5 +1,3 @@
-// Arquivo: api/banco.js
-
 const { Pool } = require('pg');
 
 // Esta configuração já está perfeita. Ela cria um "pool" de conexões

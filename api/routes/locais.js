@@ -1,10 +1,8 @@
 const express = require('express');
 
-const router = express.Router(); // Em vez de app, usamos o Router do Express
-const pool = require('../db');   // Importamos a conexão do nosso novo arquivo db.js
+const router = express.Router();
+const pool = require('../db'); 
 
-// GET: Buscar todos os locais
-// OBS: A rota agora é só '/', porque o '/locais' será definido no arquivo principal
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM locais ORDER BY id ASC;');
