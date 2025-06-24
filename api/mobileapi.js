@@ -1,7 +1,7 @@
 const express = require('express');
 
 const app = express();
-const locaisRoutes = require('./routes/locais'); // 1. Importa nosso novo roteador
+const locaisRoutes = require('./routes/locais');
 
 // Middleware para o Express entender JSON no corpo das requisições
 app.use(express.json());
