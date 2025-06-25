@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./db'); // ajuste para o caminho correto do seu arquivo que exporta o pool
+const pool = require('./db'); 
 
 const app = express();
 
@@ -19,7 +19,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
 
-// Rota para testar conexão com banco de dados
 app.get('/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');

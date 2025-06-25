@@ -13,7 +13,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET: Buscar um local por ID
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -28,7 +27,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST: Criar um novo local
 router.post('/', async (req, res) => {
     const { nome, endereco, cidade } = req.body;
     try {
@@ -43,8 +41,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// --- ROTA DE EDIÇÃO (UPDATE) ---
-// Esta é a função para editar um local. Ela usa o método PUT.
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { nome, endereco, cidade } = req.body;
@@ -63,7 +59,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE: Excluir um local
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
