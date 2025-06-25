@@ -48,12 +48,18 @@ export const updateEvento = async (id: string, eventoData: any) => {
 };
 
 export const deleteEvento = async (id: string) => {
-  const response = await fetch(`${API_URL}/eventos/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(errorBody.message || 'Falha ao deletar o evento.');
+  try { // Adicione um try-catch aqui para capturar erros antes de enviar ao componente
+    const response = await fetch(`<span class="math-inline">\{API\_URL\}/eventos/</span>{id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({ message: 'Erro desconhecido.' })); // Tenta ler o corpo do erro
+      throw new Error(errorBody.message || 'Falha ao deletar o evento.');
+    }
+    // Não há retorno esperado (status 204), então não precisamos de response.json()
+  } catch (error) {
+    console.error('Erro na função deleteEvento da API:', error); // <--- Log aqui!
+    throw error; // Re-throw para que o componente possa tratar
   }
 };
 

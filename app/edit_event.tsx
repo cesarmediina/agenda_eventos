@@ -62,7 +62,12 @@ export default function EditEventScreen() {
 
   // Busca os dados do evento e a lista de locais ao carregar a tela
   useEffect(() => {
-    if (!id) return;
+    console.log('ID do evento na tela de edição:', id); // <--- Adicione esta linha
+    if (!id) {
+      console.warn('ID não encontrado na tela de edição, retornando.');
+      router.back(); // ou Alert.alert e depois router.back()
+      return;
+    }
 
     const carregarDados = async () => {
       try {
