@@ -10,6 +10,7 @@ interface EventoDaAPI {
   id: string;
   nome_evento: string;
   nome_local: string;
+  endereco: string;
   data: string;
   horario: string;
 }
@@ -22,13 +23,44 @@ export default function HomeScreen() {
     useCallback(() => {
       const carregarEventosDaAPI = async () => {
         setIsLoading(true);
-        const eventosSalvos = await getAllEventos();
-        setEventos(eventosSalvos);
-        setIsLoading(false);
+        try {
+          const eventosSalvos = await getAllEventos();
+          console.log("Eventos recebidos na HomeScreen:", eventosSalvos); // Para depuração
+          setEventos(eventosSalvos);
+        } catch (error) {
+          console.error("Erro ao carregar eventos na HomeScreen:", error);
+          // Opcional: exibir uma mensagem de erro para o usuário
+          // Alert.alert("Erro", "Não foi possível carregar os eventos.");
+        } finally {
+          setIsLoading(false);
+        }
       };
       carregarEventosDaAPI();
     }, [])
   );
+
+  const formatarDataParaExibicao = (dataString: string) => {
+    try {
+      const dataObjeto = new Date(dataString);
+      if (isNaN(dataObjeto.getTime())) {
+        return "Data inválida";
+      }
+
+      // *** CORREÇÃO AQUI: TIPAGEM EXPLÍCITA ***
+      const opcoesDeFormato: Intl.DateTimeFormatOptions = {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      };
+
+      const dataFormatada = dataObjeto.toLocaleDateString('pt-BR', opcoesDeFormato);
+      return dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return dataString;
+    }
+};
 
   if (isLoading) {
     return (
@@ -58,8 +90,10 @@ export default function HomeScreen() {
                 {/* Usamos os nomes dos campos que vêm da API */}
                 <Text style={styles.eventTitle}>{item.nome_evento}</Text>
                 <Text style={styles.eventInfo}>{item.nome_local}</Text>
-                <Text style={styles.eventInfo}>{item.data}</Text>
+                <Text style={styles.eventInfo}>{formatarDataParaExibicao(item.data)}</Text>
                 <Text style={styles.eventInfo}>{item.horario}</Text>
+                <Text style={styles.eventInfo}>{item.horario}</Text>
+                {item.endereco && <Text style={styles.eventInfo}>{item.endereco}</Text>}
               </View>
               <Link href={{ pathname: '/edit_event', params: { id: item.id } }}>
                 <Feather name="edit" size={24} color="#333" />
