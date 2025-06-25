@@ -63,8 +63,15 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { nome_evento, data, horario, local_id } = req.body;
+
+    // É uma boa prática validar também na atualização
+    if (!nome_evento || !data || !horario || !local_id) {
+        return res.status(400).json({ message: 'Todos os campos do evento são obrigatórios para atualização.' });
+    }
+
     try {
         const { rows } = await pool.query(
+            'UPDATE eventos SET nome_evento = $1, data = $2, horario = $3, local_id = $4 WHERE id = $5 RETURNING *;', // <--- QUERY SQL ADICIONADA AQUI
             [nome_evento, data, horario, local_id, id]
         );
         if (rows.length === 0) {

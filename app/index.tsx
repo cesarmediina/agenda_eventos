@@ -90,9 +90,9 @@ export default function HomeScreen() {
                 {/* Usamos os nomes dos campos que vêm da API */}
                 <Text style={styles.eventTitle}>{item.nome_evento}</Text>
                 <Text style={styles.eventInfo}>{item.nome_local}</Text>
+                {item.endereco && <Text style={styles.eventInfo}>{item.endereco}</Text>}
                 <Text style={styles.eventInfo}>{formatarDataParaExibicao(item.data)}</Text>
                 <Text style={styles.eventInfo}>{item.horario}</Text>
-                {item.endereco && <Text style={styles.eventInfo}>{item.endereco}</Text>}
               </View>
               <Link href={{ pathname: '/edit_event', params: { id: item.id } }}>
                 <Feather name="edit" size={24} color="#333" />

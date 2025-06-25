@@ -23,23 +23,42 @@ LocaleConfig.locales['pt-br'] = {
 
 LocaleConfig.defaultLocale = 'pt-br';
 
-
 export default function EditEventScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   // States para os dados do formulário
   const [nome, setNome] = useState('');
-  const [data, setData] = useState('');
+  // *** MUDANÇA AQUI: DOIS ESTADOS PARA A DATA ***
+  const [dataParaDB, setDataParaDB] = useState(''); // Armazena a data no formato YYYY-MM-DD para o banco de dados
+  const [dataParaExibicao, setDataParaExibicao] = useState(''); // Armazena a data no formato amigável para exibição
   const [horario, setHorario] = useState('');
   const [localSelecionado, setLocalSelecionado] = useState<number | null>(null);
-  
+
   // States de controle da UI
   const [locais, setLocais] = useState<{ id: number; nome: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+
+  // Função auxiliar para formatar a data do formato do DB (YYYY-MM-DD) para exibição
+  const formatarDataDoDBParaExibicao = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      // Cria um objeto Date. Adicionar 'T12:00:00' ajuda a evitar problemas de fuso horário.
+      const dateObj = new Date(dateString + 'T12:00:00');
+      if (isNaN(dateObj.getTime())) {
+        return "Data inválida";
+      }
+      const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+      const formattedDate = dateObj.toLocaleDateString('pt-BR', options);
+      return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+    } catch (e) {
+      console.error("Erro ao formatar data do DB para exibição:", e);
+      return dateString; // Retorna a string original em caso de erro
+    }
+  };
 
   // Busca os dados do evento e a lista de locais ao carregar a tela
   useEffect(() => {
@@ -53,10 +72,13 @@ export default function EditEventScreen() {
           getEventoById(id),
           getAllLocais()
         ]);
+
+        console.log("Dados do evento carregados:", dadosDoEvento); // Log para depuração
         
         // Preenche os campos com os dados do evento que vieram da API
         setNome(dadosDoEvento.nome_evento);
-        setData(dadosDoEvento.data);
+        setDataParaDB(dadosDoEvento.data); // <--- SALVA A DATA DO DB (YYYY-MM-DD) AQUI
+        setDataParaExibicao(formatarDataDoDBParaExibicao(dadosDoEvento.data)); // <--- FORMATA PARA EXIBIÇÃO
         setHorario(dadosDoEvento.horario);
         setLocalSelecionado(dadosDoEvento.local_id);
         
@@ -64,7 +86,7 @@ export default function EditEventScreen() {
         setLocais(dadosDosLocais);
 
       } catch (error) {
-        console.error(error);
+        console.error("Erro ao carregar dados do evento:", error); // Log mais detalhado
         Alert.alert('Erro', 'Não foi possível carregar os dados do evento.');
         router.back();
       } finally {
@@ -76,7 +98,8 @@ export default function EditEventScreen() {
 
   // Função para salvar as alterações
   const handleSalvarEdicao = async () => {
-    if (!id || !nome || !localSelecionado || !data || !horario) {
+    // *** MUDANÇA AQUI: VALIDA dataParaDB ***
+    if (!id || !nome || !localSelecionado || !dataParaDB || !horario) {
       Alert.alert('Atenção', 'Preencha todos os campos!');
       return;
     }
@@ -84,17 +107,19 @@ export default function EditEventScreen() {
     setIsSaving(true);
     const eventoAtualizado = {
       nome_evento: nome,
-      data,
+      data: dataParaDB, // <--- AQUI: Envia a data no formato YYYY-MM-DD para o backend
       horario,
       local_id: localSelecionado,
     };
 
     try {
+      console.log('Enviando para atualização:', eventoAtualizado); // Log para depuração
       await updateEvento(id, eventoAtualizado);
       Alert.alert('Sucesso!', 'Evento atualizado.');
       router.back();
     } catch (error: any) {
-      Alert.alert('Erro', error.message);
+      console.error("Erro ao salvar edição:", error); // Log mais detalhado
+      Alert.alert('Erro', error.message || 'Não foi possível salvar o evento. Tente novamente.');
     } finally {
       setIsSaving(false);
     }
@@ -110,13 +135,16 @@ export default function EditEventScreen() {
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Excluir", style: "destructive", onPress: async () => {
-          setIsSaving(true);
+          setIsSaving(true); // Desabilita botões enquanto a operação ocorre
           try {
+            console.log('Tentando excluir evento com ID:', id); // Log para depuração
             await deleteEvento(id);
+            console.log('Evento excluído com sucesso!');
             Alert.alert('Sucesso', 'Evento excluído.');
-            router.push('/'); // Volta para a home
+            router.push('/'); // Volta para a home após exclusão
           } catch (error: any) {
-            Alert.alert('Erro', error.message);
+            console.error("Erro ao excluir evento:", error); // Log mais detalhado
+            Alert.alert('Erro', error.message || 'Não foi possível excluir o evento. Tente novamente.');
           } finally {
             setIsSaving(false);
           }
@@ -126,70 +154,74 @@ export default function EditEventScreen() {
   };
 
   if (isLoading) {
-    return <View style={styles.container}><ActivityIndicator size="large" /></View>;
+    return <View style={[styles.container, styles.loadingContainer]}><ActivityIndicator size="large" color="#000" /></View>; // Adicionado estilo para centralizar
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Editar Evento</Text>
       
-       <Text style={styles.label}>Nome do Evento</Text>
-        <TextInput style={styles.input} value={nome} onChangeText={setNome}/>
+      <Text style={styles.label}>Nome do Evento</Text>
+      <TextInput style={styles.input} value={nome} onChangeText={setNome}/>
 
-        <Text style={styles.label}>Local do Evento</Text>
-        <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
-            <Text style={styles.inputText}>
-                {localSelecionado ? locais.find(l => l.id === localSelecionado)?.nome : 'Selecione um local'}
-            </Text>
-        </TouchableOpacity>
-        
-        {/* Modal para seleção de local */}
-        <Modal visible={modalVisible} transparent animationType="slide">
-          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-            <View style={styles.modalOverlay} />
-          </TouchableWithoutFeedback>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={locais}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity style={styles.modalItem} onPress={() => { setLocalSelecionado(item.id); setModalVisible(false); }}>
-                  <Text style={styles.modalItemText}>{item.nome}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </Modal>
+      <Text style={styles.label}>Local do Evento</Text>
+      <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+          <Text style={styles.inputText}>
+              {localSelecionado ? locais.find(l => l.id === localSelecionado)?.nome : 'Selecione um local'}
+          </Text>
+      </TouchableOpacity>
+      
+      {/* Modal para seleção de local */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
+          <FlatList
+            data={locais}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.modalItem} onPress={() => { setLocalSelecionado(item.id); setModalVisible(false); }}>
+                <Text style={styles.modalItemText}>{item.nome}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </Modal>
 
-        <Text style={styles.label}>Data</Text>
-        <TextInput style={styles.input} value={data} editable={false} />
-        <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
+      <Text style={styles.label}>Data</Text>
+      {/* *** MUDANÇA AQUI: USA dataParaExibicao PARA O VALOR DO INPUT *** */}
+      <TextInput style={styles.input} value={dataParaExibicao} editable={false} /> 
+      <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
-        {showCalendar && (
-            <Calendar onDayPress={(day: DateData) => {
-                const dataSelecionada = new Date(day.dateString + 'T12:00:00');
-                const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionada); 
-                const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
-                setData(formatadoComInicialMaiuscula);
-                setShowCalendar(false);
-            }} />
-        )}
+      {showCalendar && (
+          <Calendar onDayPress={(day: DateData) => {
+              // Quando uma nova data é selecionada no calendário
+              const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
+              const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
+              const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
+              
+              setDataParaExibicao(formatadoComInicialMaiuscula); // Para o TextInput de exibição
+              setDataParaDB(day.dateString); // <--- PARA O BACKEND: YYYY-MM-DD
+              setShowCalendar(false);
+          }} />
+      )}
 
-        <Text style={styles.label}>Horário</Text>
-        <TextInput
-            style={styles.input}
-            value={horario}
-            onChangeText={(text) => {
-                const cleanText = text.replace(/\D/g, ''); 
-                let formatted = cleanText;
-                if (cleanText.length > 2) {
-                  formatted = `${cleanText.slice(0, 2)}:${cleanText.slice(2, 4)}`;
-                }
-                setHorario(formatted);
-            }}
-            keyboardType="numeric"
-            placeholder="Ex: 20:00"
-        />
+      <Text style={styles.label}>Horário</Text>
+      <TextInput
+          style={styles.input}
+          value={horario}
+          onChangeText={(text) => {
+              const cleanText = text.replace(/\D/g, ''); 
+              let formatted = cleanText;
+              if (cleanText.length > 2) {
+                formatted = `${cleanText.slice(0, 2)}:${cleanText.slice(2, 4)}`;
+              }
+              setHorario(formatted);
+          }}
+          keyboardType="numeric"
+          placeholder="Ex: 20:00"
+      />
 
       <TouchableOpacity style={[styles.editButton, isSaving && styles.saveButtonDisabled]} onPress={handleSalvarEdicao} disabled={isSaving}>
         {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Alterações</Text>}
@@ -204,6 +236,11 @@ export default function EditEventScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdf6ec', padding: 20 },
+  loadingContainer: { // Novo estilo para centralizar o ActivityIndicator
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20 },
   label: { fontSize: 16, marginBottom: 5 },
   input: {
