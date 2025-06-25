@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router(); // Usamos o Router do Express
-const pool = require('../db');   // Importamos a conexão do nosso ficheiro db.js
+const router = express.Router(); 
+const pool = require('../db');
 
 /**
  * @route   POST /eventos
@@ -8,10 +8,8 @@ const pool = require('../db');   // Importamos a conexão do nosso ficheiro db.j
  * @access  Public
  */
 router.post('/', async (req, res) => {
-  // O corpo do pedido (body) enviado pelo teu app vai ter estes dados
   const { nome_evento, data, horario, local_id } = req.body;
 
-  // Uma validação simples para garantir que os dados mais importantes não vêm vazios
   if (!nome_evento || !local_id) {
     return res.status(400).json({ message: 'O nome do evento e o local são obrigatórios.' });
   }
