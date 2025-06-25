@@ -7,6 +7,8 @@ const app = express();
 const locaisRoutes = require('./routes/locais');
 const eventosRoutes = require('./routes/eventos');
 
+console.log('A DATABASE_URL recebida é:', process.env.DATABASE_URL);
+
 app.use(cors());
 app.use(express.json());
 
