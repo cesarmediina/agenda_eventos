@@ -16,7 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
-import { getAllLocais, createEvento } from '../scr/services/api'; 
+import { getAllLocais, createEvento } from '../scr/services/api';
 
 LocaleConfig.locales['pt-br'] = {
   monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
@@ -32,9 +32,13 @@ export default function AddEventScreen() {
   const [locais, setLocais] = useState<{ id: number; nome: string; endereco: string }[]>([]);
   const [localSelecionado, setLocalSelecionado] = useState<number | null>(null);
   const [loadingLocais, setLoadingLocais] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // Novo state para o loading do botão
+  const [isSaving, setIsSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [data, setData] = useState('');
+  
+  // *** MUDANÇA AQUI: NOVO ESTADO PARA EXIBIR A DATA, O ESTADO 'data' SERÁ PARA O DB ***
+  const [dataParaDB, setDataParaDB] = useState(''); // Estado para o formato YYYY-MM-DD (para o backend)
+  const [dataParaExibicao, setDataParaExibicao] = useState(''); // Estado para o formato amigável (para o TextInput)
+  
   const [horario, setHorario] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const router = useRouter();
@@ -42,7 +46,7 @@ export default function AddEventScreen() {
   useEffect(() => {
     const carregarLocais = async () => {
       setLoadingLocais(true);
-      const dadosDosLocais = await getAllLocais(); // Usa a nossa função centralizada
+      const dadosDosLocais = await getAllLocais();
       setLocais(dadosDosLocais);
       setLoadingLocais(false);
     };
@@ -50,7 +54,8 @@ export default function AddEventScreen() {
   }, []);
 
   const handleAdicionarEvento = async () => {
-    if (!nome || !localSelecionado || !data || !horario) {
+    // *** MUDANÇA AQUI: USE dataParaDB NA VALIDAÇÃO ***
+    if (!nome || !localSelecionado || !dataParaDB || !horario) {
       Alert.alert('Atenção', 'Preenche todos os campos!');
       return;
     }
@@ -59,19 +64,22 @@ export default function AddEventScreen() {
 
     const eventoParaSalvar = {
       nome_evento: nome,
-      data: data,
+      data: dataParaDB, // <--- AQUI USAMOS A DATA NO FORMATO DO BANCO DE DADOS
       horario: horario,
       local_id: localSelecionado,
     };
 
     try {
+      // Adicionei logs para depuração
+      console.log('Enviando evento para o backend:', eventoParaSalvar); 
       await createEvento(eventoParaSalvar); 
+      console.log('Evento criado com sucesso!');
 
       Alert.alert('Sucesso!', 'O teu evento foi adicionado à agenda.');
-      router.back();
+      router.back(); // Isso só é executado se a criação for bem-sucedida
 
     } catch (error: any) {
-      console.error(error);
+      console.error('Erro ao adicionar evento:', error); // Log mais detalhado do erro
       Alert.alert('Ops!', error.message || 'Não foi possível salvar o evento. Tenta novamente.');
     } finally {
       setIsSaving(false); 
@@ -125,15 +133,19 @@ export default function AddEventScreen() {
         )}
 
         <Text style={styles.label}>Data</Text>
-        <TextInput style={styles.input} value={data} editable={false} />
+        {/* *** MUDANÇA AQUI: USE dataParaExibicao NO TEXTINPUT *** */}
+        <TextInput style={styles.input} value={dataParaExibicao} editable={false} /> 
         <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
         {showCalendar && (
-            <Calendar onDayPress={(day: DateData) => { // Corrigido o tipo do 'day'
-                const dataSelecionada = new Date(day.dateString + 'T12:00:00');
-                const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionada); 
-                const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
-                setData(formatadoComInicialMaiuscula);
+            <Calendar onDayPress={(day: DateData) => {
+                // Formato para exibição no Input (amigável ao usuário)
+                const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
+                const dataFormatadaParaExibicao = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
+                const formatadoComInicialMaiuscula = dataFormatadaParaExibicao.charAt(0).toUpperCase() + dataFormatadaParaExibicao.slice(1); 
+                
+                setDataParaExibicao(formatadoComInicialMaiuscula); // Atualiza o estado para o input
+                setDataParaDB(day.dateString); // <--- AQUI: Salva o YYYY-MM-DD para o backend
                 setShowCalendar(false);
             }} />
         )}
