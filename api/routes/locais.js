@@ -79,5 +79,4 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// No final, a gente exporta o objeto router com todas as rotas configuradas.
 module.exports = router;

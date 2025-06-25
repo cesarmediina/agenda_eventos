@@ -89,4 +89,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Erro interno ao deletar evento.' });
     }
 });
+
 module.exports = router;
