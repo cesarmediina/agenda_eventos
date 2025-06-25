@@ -27,9 +27,9 @@ export default function EditEventScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  // States para os dados do formulário
+  console.log('Valor de ID na EditEventScreen (fora do useEffect):', id);
+
   const [nome, setNome] = useState('');
-  // *** MUDANÇA AQUI: DOIS ESTADOS PARA A DATA ***
   const [dataParaDB, setDataParaDB] = useState(''); // Armazena a data no formato YYYY-MM-DD para o banco de dados
   const [dataParaExibicao, setDataParaExibicao] = useState(''); // Armazena a data no formato amigável para exibição
   const [horario, setHorario] = useState('');
@@ -64,9 +64,9 @@ export default function EditEventScreen() {
   useEffect(() => {
     console.log('ID do evento na tela de edição:', id); // <--- Adicione esta linha
     if (!id) {
-      console.warn('ID não encontrado na tela de edição, retornando.');
-      router.back(); // ou Alert.alert e depois router.back()
-      return;
+        console.warn('ID não encontrado na tela de edição, retornando.');
+        router.back(); // ou Alert.alert e depois router.back()
+        return;
     }
 
     const carregarDados = async () => {
