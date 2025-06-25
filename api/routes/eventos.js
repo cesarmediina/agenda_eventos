@@ -15,21 +15,45 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // Este é o comando SQL para inserir uma nova linha na nossa tabela 'eventos'
-    // Usamos $1, $2, etc., para segurança (prevenção de SQL Injection)
-    // RETURNING * faz com que o banco de dados nos devolva o evento completo que foi criado
     const { rows } = await pool.query(
       'INSERT INTO eventos (nome_evento, data, horario, local_id) VALUES ($1, $2, $3, $4) RETURNING *;',
       [nome_evento, data, horario, local_id]
     );
     
-    // Se tudo correr bem, respondemos com um status 201 (Created) e o evento novo
     res.status(201).json(rows[0]);
   } catch (error) {
-    // Se der algum erro no banco de dados, registamos no log e enviamos uma mensagem de erro genérica
     console.error('Erro ao criar evento:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao criar o evento.' });
   }
 });
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nome_evento, data, horario, local_id } = req.body;
+    try {
+        const { rows } = await pool.query(
+            [nome_evento, data, horario, local_id, id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Evento não encontrado para atualizar" });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(`Erro ao atualizar evento ${id}:`, error);
+        res.status(500).json({ message: 'Erro interno ao atualizar evento.' });
+    }
+});
 
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('DELETE FROM eventos WHERE id = $1;', [id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: "Evento não encontrado para deletar" });
+        }
+        res.status(204).send();
+    } catch (error) {
+        console.error(`Erro ao deletar evento ${id}:`, error);
+        res.status(500).json({ message: 'Erro interno ao deletar evento.' });
+    }
+});
 module.exports = router;
