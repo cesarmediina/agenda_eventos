@@ -13,9 +13,6 @@ app.get('/health', (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`API a correr na porta ${port}`);
-});
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`API a correr na porta ${port}`);
