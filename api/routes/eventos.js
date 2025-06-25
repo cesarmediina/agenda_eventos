@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
                 ev.nome_evento, 
                 ev.data, 
                 ev.horario, 
-                lo.nome as nome_local 
+                lo.nome as nome_local,
+                lo.endereco
              FROM eventos ev 
              JOIN locais lo ON ev.local_id = lo.id 
              ORDER BY ev.id DESC;`
