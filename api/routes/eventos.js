@@ -2,11 +2,26 @@ const express = require('express');
 const router = express.Router(); 
 const pool = require('../db');
 
-/**
- * @route   POST /eventos
- * @desc    Cria um novo evento
- * @access  Public
- */
+router.get('/', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT 
+                ev.id, 
+                ev.nome_evento, 
+                ev.data, 
+                ev.horario, 
+                lo.nome as nome_local 
+             FROM eventos ev 
+             JOIN locais lo ON ev.local_id = lo.id 
+             ORDER BY ev.id DESC;`
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar eventos:', error);
+        res.status(500).json({ message: 'Erro interno ao buscar eventos.' });
+    }
+});
+
 router.post('/', async (req, res) => {
   const { nome_evento, data, horario, local_id } = req.body;
 
