@@ -9,8 +9,6 @@ app.use('/locais', locaisRoutes);
 app.use('/eventos', eventosRoutes);
 
 const port = process.env.PORT || 3000;
-
 app.listen(port, () => {
-  console.log(`API rodando na porta ${port}`);
-}
-);
+  console.log(`API a correr na porta ${port}`);
+});
