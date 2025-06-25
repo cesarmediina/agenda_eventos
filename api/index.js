@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./api/db.js'); // ajuste para o caminho correto do seu arquivo que exporta o pool
+const pool = require('..db.js'); // ajuste para o caminho correto do seu arquivo que exporta o pool
 
 const app = express();
 
