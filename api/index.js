@@ -1,35 +1,24 @@
-const express = require('express');
-const cors = require('cors');
-const pool = require('./db'); // ajuste para o caminho correto do seu arquivo que exporta o pool
+// Ficheiro: api/index.js (Versão de Teste Simplificada)
 
+const express = require('express');
 const app = express();
 
-const locaisRoutes = require('./routes/locais');
-const eventosRoutes = require('./routes/eventos');
+// A única porta que vamos usar é a da Railway.
+// Se process.env.PORT não existir, a aplicação vai crashar, o que é bom para debug.
+const port = process.env.PORT;
 
-app.use(cors());
-app.use(express.json());
+if (!port) {
+  console.error("ERRO: A variável de ambiente PORT não está definida!");
+  process.exit(1); // Encerra a aplicação se a porta não for fornecida
+}
 
-app.use('/locais', locaisRoutes);
-app.use('/eventos', eventosRoutes);
-
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'API is healthy' });
+// A única rota que vai existir, na raiz do site.
+app.get('/', (req, res) => {
+  res.status(200).send('<h1>Olá Mundo! A minha API de teste está a funcionar!</h1>');
 });
 
-// Rota para testar conexão com banco de dados
-app.get('/test-db', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ now: result.rows[0].now });
-  } catch (error) {
-    console.error('DB connection error:', error);
-    res.status(500).json({ error: 'Erro na conexão com o banco' });
-  }
-});
-
-const port = process.env.PORT || 3000;
-
+// Sem banco de dados, sem rotas complexas, só o básico.
+// Garante que o bind a '0.0.0.0' está aqui.
 app.listen(port, '0.0.0.0', () => {
-  console.log(`API a correr na porta ${port}`);
+  console.log(`>>> SERVIDOR DE TESTE 'OLÁ MUNDO' a correr na porta ${port} <<<`);
 });
