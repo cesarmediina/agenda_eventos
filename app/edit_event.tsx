@@ -133,8 +133,63 @@ export default function EditEventScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Editar Evento</Text>
       
-      {/* ... Aqui entra o mesmo JSX da tela de Adicionar para os campos: ... */}
-      {/* Nome, seletor de Local (usando o Modal e a FlatList), Data e Horário */}
+       <Text style={styles.label}>Nome do Evento</Text>
+        <TextInput style={styles.input} value={nome} onChangeText={setNome}/>
+
+        <Text style={styles.label}>Local do Evento</Text>
+        <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+            <Text style={styles.inputText}>
+                {localSelecionado ? locais.find(l => l.id === localSelecionado)?.nome : 'Selecione um local'}
+            </Text>
+        </TouchableOpacity>
+        
+        {/* Modal para seleção de local */}
+        <Modal visible={modalVisible} transparent animationType="slide">
+          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={styles.modalContent}>
+            <FlatList
+              data={locais}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.modalItem} onPress={() => { setLocalSelecionado(item.id); setModalVisible(false); }}>
+                  <Text style={styles.modalItemText}>{item.nome}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </Modal>
+
+        <Text style={styles.label}>Data</Text>
+        <TextInput style={styles.input} value={data} editable={false} />
+        <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
+
+        {showCalendar && (
+            <Calendar onDayPress={(day: DateData) => {
+                const dataSelecionada = new Date(day.dateString + 'T12:00:00');
+                const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionada); 
+                const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
+                setData(formatadoComInicialMaiuscula);
+                setShowCalendar(false);
+            }} />
+        )}
+
+        <Text style={styles.label}>Horário</Text>
+        <TextInput
+            style={styles.input}
+            value={horario}
+            onChangeText={(text) => {
+                const cleanText = text.replace(/\D/g, ''); 
+                let formatted = cleanText;
+                if (cleanText.length > 2) {
+                  formatted = `${cleanText.slice(0, 2)}:${cleanText.slice(2, 4)}`;
+                }
+                setHorario(formatted);
+            }}
+            keyboardType="numeric"
+            placeholder="Ex: 20:00"
+        />
 
       <TouchableOpacity style={[styles.editButton, isSaving && styles.saveButtonDisabled]} onPress={handleSalvarEdicao} disabled={isSaving}>
         {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Alterações</Text>}
@@ -158,6 +213,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#000',
   },
+  inputText: { 
+    color: '#000', fontSize: 16 
+  },
   editButton: {
     backgroundColor: '#000',
     padding: 15,
@@ -176,5 +234,18 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { 
     backgroundColor: '#999' 
-  }
+  },
+  modalOverlay: { 
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' 
+
+  },
+  modalContent: { 
+    backgroundColor: '#fff', padding: 20, margin: 40, borderRadius: 10, maxHeight: '50%' 
+  },
+  modalItem: { 
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#ccc' 
+  },
+  modalItemText: { 
+    fontSize: 16, color: '#000' 
+  },
 });

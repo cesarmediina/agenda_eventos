@@ -1,4 +1,4 @@
-const API_URL = 'agendaeventos-production-904c.up.railway.appgit ';
+const API_URL = 'https://agendaeventos-production-904c.up.railway.app';
 
 export const getAllLocais = async () => {
   try {
