@@ -41,6 +41,24 @@ router.post('/', async (req, res) => {
     res.status(500).json({ message: 'Erro interno do servidor ao criar o evento.' });
   }
 });
+
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await pool.query(
+            'SELECT ev.id, ev.nome_evento, ev.data, ev.horario, ev.local_id, lo.nome as nome_local, lo.endereco, lo.cidade FROM eventos ev JOIN locais lo ON ev.local_id = lo.id WHERE ev.id = $1;', 
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Evento não encontrado" });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(`Erro ao buscar evento ${id}:`, error);
+        res.status(500).json({ message: 'Erro interno ao buscar evento.' });
+    }
+});
+
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { nome_evento, data, horario, local_id } = req.body;
