@@ -27,26 +27,22 @@ export default function EditEventScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  console.log('Valor de ID na EditEventScreen (fora do useEffect):', id);
-
   const [nome, setNome] = useState('');
-  const [dataParaDB, setDataParaDB] = useState(''); // Armazena a data no formato YYYY-MM-DD para o banco de dados
-  const [dataParaExibicao, setDataParaExibicao] = useState(''); // Armazena a data no formato amigável para exibição
+  const [dataParaDB, setDataParaDB] = useState('');
+  const [dataParaExibicao, setDataParaExibicao] = useState('');
   const [horario, setHorario] = useState('');
   const [localSelecionado, setLocalSelecionado] = useState<number | null>(null);
 
-  // States de controle da UI
   const [locais, setLocais] = useState<{ id: number; nome: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); 
   const [showCalendar, setShowCalendar] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false); 
 
-  // Função auxiliar para formatar a data do formato do DB (YYYY-MM-DD) para exibição
   const formatarDataDoDBParaExibicao = (dateString: string) => {
     if (!dateString) return '';
     try {
-      // Cria um objeto Date. Adicionar 'T12:00:00' ajuda a evitar problemas de fuso horário.
       const dateObj = new Date(dateString + 'T12:00:00');
       if (isNaN(dateObj.getTime())) {
         return "Data inválida";
@@ -56,42 +52,31 @@ export default function EditEventScreen() {
       return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
     } catch (e) {
       console.error("Erro ao formatar data do DB para exibição:", e);
-      return dateString; // Retorna a string original em caso de erro
+      return dateString;
     }
   };
 
-  // Busca os dados do evento e a lista de locais ao carregar a tela
   useEffect(() => {
-    console.log('ID do evento na tela de edição:', id); // <--- Adicione esta linha
-    if (!id) {
-        console.warn('ID não encontrado na tela de edição, retornando.');
-        router.back(); // ou Alert.alert e depois router.back()
-        return;
-    }
+    if (!id) return;
 
     const carregarDados = async () => {
       try {
         setIsLoading(true);
-        // Busca os dados do evento específico E a lista de todos os locais em paralelo
         const [dadosDoEvento, dadosDosLocais] = await Promise.all([
           getEventoById(id),
           getAllLocais()
         ]);
 
-        console.log("Dados do evento carregados:", dadosDoEvento); // Log para depuração
-        
-        // Preenche os campos com os dados do evento que vieram da API
         setNome(dadosDoEvento.nome_evento);
-        setDataParaDB(dadosDoEvento.data); // <--- SALVA A DATA DO DB (YYYY-MM-DD) AQUI
-        setDataParaExibicao(formatarDataDoDBParaExibicao(dadosDoEvento.data)); // <--- FORMATA PARA EXIBIÇÃO
+        setDataParaDB(dadosDoEvento.data);
+        setDataParaExibicao(formatarDataDoDBParaExibicao(dadosDoEvento.data));
         setHorario(dadosDoEvento.horario);
         setLocalSelecionado(dadosDoEvento.local_id);
         
-        // Armazena a lista de locais para o seletor
         setLocais(dadosDosLocais);
 
       } catch (error) {
-        console.error("Erro ao carregar dados do evento:", error); // Log mais detalhado
+        console.error("Erro ao carregar dados do evento:", error);
         Alert.alert('Erro', 'Não foi possível carregar os dados do evento.');
         router.back();
       } finally {
@@ -101,9 +86,7 @@ export default function EditEventScreen() {
     carregarDados();
   }, [id]);
 
-  // Função para salvar as alterações
   const handleSalvarEdicao = async () => {
-    // *** MUDANÇA AQUI: VALIDA dataParaDB ***
     if (!id || !nome || !localSelecionado || !dataParaDB || !horario) {
       Alert.alert('Atenção', 'Preencha todos os campos!');
       return;
@@ -112,54 +95,51 @@ export default function EditEventScreen() {
     setIsSaving(true);
     const eventoAtualizado = {
       nome_evento: nome,
-      data: dataParaDB, // <--- AQUI: Envia a data no formato YYYY-MM-DD para o backend
+      data: dataParaDB,
       horario,
       local_id: localSelecionado,
     };
 
     try {
-      console.log('Enviando para atualização:', eventoAtualizado); // Log para depuração
+      console.log('Enviando para atualização:', eventoAtualizado);
       await updateEvento(id, eventoAtualizado);
       Alert.alert('Sucesso!', 'Evento atualizado.');
       router.back();
     } catch (error: any) {
-      console.error("Erro ao salvar edição:", error); // Log mais detalhado
+      console.error("Erro ao salvar edição:", error);
       Alert.alert('Erro', error.message || 'Não foi possível salvar o evento. Tente novamente.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Função para excluir o evento
-  const handleExcluirEvento = async () => {
-    if(!id) return;
+  const handleExcluirEvento = () => {
+    if (!id) {
+        console.warn('ID não encontrado ao tentar excluir.');
+        return;
+    }
+    setConfirmModalVisible(true); 
+  };
 
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Excluir", style: "destructive", onPress: async () => {
-          setIsSaving(true); // Desabilita botões enquanto a operação ocorre
-          try {
-            console.log('Tentando excluir evento com ID:', id); // Log para depuração
-            await deleteEvento(id);
-            console.log('Evento excluído com sucesso!');
-            Alert.alert('Sucesso', 'Evento excluído.');
-            router.push('/'); // Volta para a home após exclusão
-          } catch (error: any) {
-            console.error("Erro ao excluir evento:", error); // Log mais detalhado
-            Alert.alert('Erro', error.message || 'Não foi possível excluir o evento. Tente novamente.');
-          } finally {
-            setIsSaving(false);
-          }
-        }}
-      ]
-    );
+  const executeDelete = async () => {
+    setConfirmModalVisible(false);
+    setIsSaving(true); 
+    try {
+      console.log('Tentando excluir evento com ID:', id);
+      await deleteEvento(id);
+      console.log('Evento excluído com sucesso!');
+      Alert.alert('Sucesso', 'Evento excluído.');
+      router.push('/');
+    } catch (error: any) {
+      console.error("Erro ao excluir evento:", error);
+      Alert.alert('Erro', error.message || 'Não foi possível excluir o evento. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
-    return <View style={[styles.container, styles.loadingContainer]}><ActivityIndicator size="large" color="#000" /></View>; // Adicionado estilo para centralizar
+    return <View style={[styles.container, styles.loadingContainer]}><ActivityIndicator size="large" color="#000" /></View>;
   }
 
   return (
@@ -195,19 +175,17 @@ export default function EditEventScreen() {
       </Modal>
 
       <Text style={styles.label}>Data</Text>
-      {/* *** MUDANÇA AQUI: USA dataParaExibicao PARA O VALOR DO INPUT *** */}
-      <TextInput style={styles.input} value={dataParaExibicao} editable={false} /> 
+      <TextInput style={styles.input} value={dataParaExibicao} editable={false} />
       <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
       {showCalendar && (
           <Calendar onDayPress={(day: DateData) => {
-              // Quando uma nova data é selecionada no calendário
               const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
               const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
               const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
               
-              setDataParaExibicao(formatadoComInicialMaiuscula); // Para o TextInput de exibição
-              setDataParaDB(day.dateString); // <--- PARA O BACKEND: YYYY-MM-DD
+              setDataParaExibicao(formatadoComInicialMaiuscula);
+              setDataParaDB(day.dateString);
               setShowCalendar(false);
           }} />
       )}
@@ -235,13 +213,28 @@ export default function EditEventScreen() {
       <TouchableOpacity style={[styles.deleteButton, isSaving && styles.saveButtonDisabled]} onPress={handleExcluirEvento} disabled={isSaving}>
         <Text style={styles.buttonText}>Excluir Evento</Text>
       </TouchableOpacity>
+
+      <Modal visible={confirmModalVisible} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setConfirmModalVisible(false)}>
+          <View style={styles.confirmModalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.confirmModalContent}>
+          <Text style={styles.confirmModalTitle}>Confirmar Exclusão</Text>
+          <Text style={styles.confirmModalMessage}>Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</Text>
+          <View style={styles.confirmModalButtons}>
+            <Button title="Cancelar" onPress={() => setConfirmModalVisible(false)} color="#999" />
+            <Button title="Excluir" onPress={executeDelete} color="red" />
+          </View>
+        </View>
+      </Modal>
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdf6ec', padding: 20 },
-  loadingContainer: { // Novo estilo para centralizar o ActivityIndicator
+  loadingContainer: { 
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -289,5 +282,36 @@ const styles = StyleSheet.create({
   },
   modalItemText: { 
     fontSize: 16, color: '#000' 
+  },
+  confirmModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fundo mais escuro para confirmação
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmModalContent: {
+    backgroundColor: '#fff',
+    padding: 25,
+    borderRadius: 10,
+    width: '80%', // Largura relativa
+    maxWidth: 350, // Largura máxima
+    alignItems: 'center',
+  },
+  confirmModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  confirmModalMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  confirmModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
   },
 });

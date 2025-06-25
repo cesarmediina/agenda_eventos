@@ -35,10 +35,8 @@ export default function AddEventScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   
-  // *** MUDANÇA AQUI: NOVO ESTADO PARA EXIBIR A DATA, O ESTADO 'data' SERÁ PARA O DB ***
-  const [dataParaDB, setDataParaDB] = useState(''); // Estado para o formato YYYY-MM-DD (para o backend)
-  const [dataParaExibicao, setDataParaExibicao] = useState(''); // Estado para o formato amigável (para o TextInput)
-  
+  const [dataParaDB, setDataParaDB] = useState(''); 
+  const [dataParaExibicao, setDataParaExibicao] = useState(''); 
   const [horario, setHorario] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const router = useRouter();
@@ -54,7 +52,6 @@ export default function AddEventScreen() {
   }, []);
 
   const handleAdicionarEvento = async () => {
-    // *** MUDANÇA AQUI: USE dataParaDB NA VALIDAÇÃO ***
     if (!nome || !localSelecionado || !dataParaDB || !horario) {
       Alert.alert('Atenção', 'Preenche todos os campos!');
       return;
@@ -64,22 +61,20 @@ export default function AddEventScreen() {
 
     const eventoParaSalvar = {
       nome_evento: nome,
-      data: dataParaDB, // <--- AQUI USAMOS A DATA NO FORMATO DO BANCO DE DADOS
+      data: dataParaDB, 
       horario: horario,
       local_id: localSelecionado,
     };
 
     try {
-      // Adicionei logs para depuração
       console.log('Enviando evento para o backend:', eventoParaSalvar); 
       await createEvento(eventoParaSalvar); 
       console.log('Evento criado com sucesso!');
 
       Alert.alert('Sucesso!', 'O teu evento foi adicionado à agenda.');
-      router.back(); // Isso só é executado se a criação for bem-sucedida
-
+      router.back(); 
     } catch (error: any) {
-      console.error('Erro ao adicionar evento:', error); // Log mais detalhado do erro
+      console.error('Erro ao adicionar evento:', error); 
       Alert.alert('Ops!', error.message || 'Não foi possível salvar o evento. Tenta novamente.');
     } finally {
       setIsSaving(false); 
@@ -133,7 +128,6 @@ export default function AddEventScreen() {
         )}
 
         <Text style={styles.label}>Data</Text>
-        {/* *** MUDANÇA AQUI: USE dataParaExibicao NO TEXTINPUT *** */}
         <TextInput style={styles.input} value={dataParaExibicao} editable={false} /> 
         <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
@@ -144,8 +138,8 @@ export default function AddEventScreen() {
                 const dataFormatadaParaExibicao = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
                 const formatadoComInicialMaiuscula = dataFormatadaParaExibicao.charAt(0).toUpperCase() + dataFormatadaParaExibicao.slice(1); 
                 
-                setDataParaExibicao(formatadoComInicialMaiuscula); // Atualiza o estado para o input
-                setDataParaDB(day.dateString); // <--- AQUI: Salva o YYYY-MM-DD para o backend
+                setDataParaExibicao(formatadoComInicialMaiuscula);
+                setDataParaDB(day.dateString); 
                 setShowCalendar(false);
             }} />
         )}

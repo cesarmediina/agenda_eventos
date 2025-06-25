@@ -146,26 +146,24 @@ const styles = StyleSheet.create({
   eventList: {
     flex: 1,
   },
-  card: {
-    backgroundColor: '#ffe4e1', 
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    width: '100%',
-    elevation: 3, // para Android
-    shadowColor: '#000', // para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
   cardContent: {
-    paddingRight: 30, 
+    paddingRight: 30,
+    flex: 1, 
   },
+
   eventCard: {
-    flexDirection: 'row',
+    backgroundColor: '#ffe4e1',
+    borderRadius: 10,       
+    padding: 15,        
+    marginVertical: 8,   
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+    flexDirection: 'row',       
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    alignItems: 'center', 
   },
   eventTitle: {
     fontSize: 18,
