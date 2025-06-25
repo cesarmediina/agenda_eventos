@@ -49,7 +49,7 @@ export const updateEvento = async (id: string, eventoData: any) => {
 
 export const deleteEvento = async (id: string) => {
   try {
-    const response = await fetch(`${API_URL}/eventos/${id}`, { // <--- CORREÇÃO AQUI!
+    const response = await fetch(`${API_URL}/eventos/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) {
@@ -61,7 +61,6 @@ export const deleteEvento = async (id: string) => {
     throw error;
   }
 };
-
 export const getAllEventos = async () => {
   try {
     const response = await fetch(`${API_URL}/eventos`);

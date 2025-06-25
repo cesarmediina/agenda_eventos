@@ -133,7 +133,6 @@ export default function AddEventScreen() {
 
         {showCalendar && (
             <Calendar onDayPress={(day: DateData) => {
-                // Formato para exibição no Input (amigável ao usuário)
                 const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
                 const dataFormatadaParaExibicao = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
                 const formatadoComInicialMaiuscula = dataFormatadaParaExibicao.charAt(0).toUpperCase() + dataFormatadaParaExibicao.slice(1); 

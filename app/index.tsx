@@ -25,12 +25,10 @@ export default function HomeScreen() {
         setIsLoading(true);
         try {
           const eventosSalvos = await getAllEventos();
-          console.log("Eventos recebidos na HomeScreen:", eventosSalvos); // Para depuração
+          console.log("Eventos recebidos na HomeScreen:", eventosSalvos); 
           setEventos(eventosSalvos);
         } catch (error) {
           console.error("Erro ao carregar eventos na HomeScreen:", error);
-          // Opcional: exibir uma mensagem de erro para o usuário
-          // Alert.alert("Erro", "Não foi possível carregar os eventos.");
         } finally {
           setIsLoading(false);
         }
@@ -46,7 +44,6 @@ export default function HomeScreen() {
         return "Data inválida";
       }
 
-      // *** CORREÇÃO AQUI: TIPAGEM EXPLÍCITA ***
       const opcoesDeFormato: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         day: '2-digit',
@@ -75,7 +72,6 @@ export default function HomeScreen() {
       <Text style={styles.title}>ROCK IT</Text>
       <Text style={styles.subtitle}>próximos eventos</Text>
 
-      {/* Se não houver eventos, mostra a mensagem de boas-vindas */}
       {eventos.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.welcomeMessage}>Nenhum evento? Vamos mudar isso!</Text>
@@ -87,7 +83,6 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <View style={styles.eventCard}>
               <View style={styles.cardContent}>
-                {/* Usamos os nomes dos campos que vêm da API */}
                 <Text style={styles.eventTitle}>{item.nome_evento}</Text>
                 <Text style={styles.eventInfo}>{item.nome_local}</Text>
                 {item.endereco && <Text style={styles.eventInfo}>{item.endereco}</Text>}
@@ -103,7 +98,7 @@ export default function HomeScreen() {
       )}
 
       <Link href="/add_event" style={styles.addButton}>
-        <Text style={styles.addButtonText}>+ Adicionar Evento</Text>
+        <Text style={styles.addButtonText}>+ adicionar evento</Text>
       </Link>
     </View>
   );
