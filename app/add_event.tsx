@@ -11,29 +11,20 @@ import {
   Modal,
   FlatList,
   TouchableWithoutFeedback,
+  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
+import { getAllLocais, createEvento } from '../scr/services/api'; 
 
 LocaleConfig.locales['pt-br'] = {
-  monthNames: [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ],
-  monthNamesShort: [
-    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
-  ],
-  dayNames: [
-    'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
-    'Quinta-feira', 'Sexta-feira', 'Sábado'
-  ],
+  monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+  monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+  dayNames: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
   dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
   today: 'Hoje'
 };
-
 LocaleConfig.defaultLocale = 'pt-br';
 
 export default function AddEventScreen() {
@@ -41,188 +32,140 @@ export default function AddEventScreen() {
   const [locais, setLocais] = useState<{ id: number; nome: string; endereco: string }[]>([]);
   const [localSelecionado, setLocalSelecionado] = useState<number | null>(null);
   const [loadingLocais, setLoadingLocais] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // Novo state para o loading do botão
   const [modalVisible, setModalVisible] = useState(false);
-
   const [data, setData] = useState('');
   const [horario, setHorario] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
-
   const router = useRouter();
 
   useEffect(() => {
-    fetch('http://192.168.0.4:3000/locais')  // Ajuste o IP se estiver testando no celular
-      .then(res => res.json())
-      .then(data => {
-        setLocais(data);
-        setLoadingLocais(false);
-      })
-      .catch(() => {
-        setLocais([]);
-        setLoadingLocais(false);
-      });
+    const carregarLocais = async () => {
+      setLoadingLocais(true);
+      const dadosDosLocais = await getAllLocais(); // Usa a nossa função centralizada
+      setLocais(dadosDosLocais);
+      setLoadingLocais(false);
+    };
+    carregarLocais();
   }, []);
 
-  const salvarEvento = async (novoEvento: any) => {
+  const handleAdicionarEvento = async () => {
+    if (!nome || !localSelecionado || !data || !horario) {
+      Alert.alert('Atenção', 'Preenche todos os campos!');
+      return;
+    }
+
+    setIsSaving(true);
+
+    const eventoParaSalvar = {
+      nome_evento: nome,
+      data: data,
+      horario: horario,
+      local_id: localSelecionado,
+    };
+
     try {
-      const eventosJSON = await AsyncStorage.getItem('eventos');
-      const eventos = eventosJSON ? JSON.parse(eventosJSON) : [];
-      eventos.push(novoEvento);
-      await AsyncStorage.setItem('eventos', JSON.stringify(eventos));
-    } catch (error) {
-      console.error('Erro ao salvar evento:', error);
+      await createEvento(eventoParaSalvar); 
+
+      Alert.alert('Sucesso!', 'O teu evento foi adicionado à agenda.');
+      router.back();
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Ops!', error.message || 'Não foi possível salvar o evento. Tenta novamente.');
+    } finally {
+      setIsSaving(false); 
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
+        <Text style={styles.title}>ROCK IT</Text>
 
-      <Text style={styles.title}>ROCK IT</Text>
-
-      <Text style={styles.label}>Nome do Evento</Text>
-      <TextInput
-        style={styles.input}
-        value={nome}
-        onChangeText={setNome}
-        placeholder="Digite o nome do evento"
-        placeholderTextColor="#fff"
-      />
-
-      <Text style={styles.label}>Local do Evento</Text>
-      {loadingLocais ? (
-        <ActivityIndicator size="small" color="#000" />
-      ) : (
-        <>
-          <TouchableOpacity
+        <Text style={styles.label}>Nome do Evento</Text>
+        <TextInput
             style={styles.input}
-            onPress={() => setModalVisible(true)}
-          >
-            <Text style={{ color: '#fff' }}>
-              {localSelecionado
-                ? locais.find(l => l.id === localSelecionado)?.nome
-                : 'Selecione um local'}
-            </Text>
-          </TouchableOpacity>
-
-          <Modal
-            visible={modalVisible}
-            transparent
-            animationType="slide"
-          >
-            <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-              <View style={styles.modalOverlay} />
-            </TouchableWithoutFeedback>
-
-            <View style={styles.modalContent}>
-              <FlatList
-                data={locais}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setLocalSelecionado(item.id);
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalItemText}>{item.nome}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </Modal>
-        </>
-      )}
-
-      <Text style={styles.label}>Data</Text>
-      <TextInput
-        style={styles.input}
-        value={data}
-        onChangeText={setData}
-        placeholder="Ex: Segunda-feira, 22/04/2025"
-        placeholderTextColor="#aaa"
-        editable={false}
-      />
-      <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
-
-      {showCalendar && (
-        <Calendar
-          markedDates={{
-            [data]: { selected: true, selectedColor: 'blue', selectedTextColor: 'white' },
-          }}
-          onDayPress={(day: { dateString: string }) => {
-            const dataSelecionada = new Date(day.dateString + 'T12:00:00');
-
-            const dataFormatada = new Intl.DateTimeFormat('pt-BR', {
-              weekday: 'long',
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            }).format(dataSelecionada); 
-            const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
-            setData(formatadoComInicialMaiuscula);
-            setShowCalendar(false);
-          }}
+            value={nome}
+            onChangeText={setNome}
+            placeholder="Digite o nome do evento"
+            placeholderTextColor="#fff"
         />
-      )}
 
-      <Text style={styles.label}>Horário</Text>
-      <TextInput
-        style={styles.input}
-        value={horario}
-        onChangeText={(text) => {
-          const cleanText = text.replace(/\D/g, ''); 
-          let formatted = cleanText;
-          if (cleanText.length > 2) {
-            formatted = `${cleanText.slice(0, 2)}:${cleanText.slice(2, 4)}`;
-          }
+        <Text style={styles.label}>Local do Evento</Text>
+        {loadingLocais ? (
+            <ActivityIndicator size="small" color="#000" />
+        ) : (
+            <>
+              <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+                <Text style={{ color: '#fff' }}>
+                  {localSelecionado ? locais.find(l => l.id === localSelecionado)?.nome : 'Selecione um local'}
+                </Text>
+              </TouchableOpacity>
+              <Modal visible={modalVisible} transparent animationType="slide">
+                  <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                      <View style={styles.modalOverlay} />
+                  </TouchableWithoutFeedback>
+                  <View style={styles.modalContent}>
+                      <FlatList
+                          data={locais}
+                          keyExtractor={(item) => item.id.toString()}
+                          renderItem={({ item }) => (
+                              <TouchableOpacity style={styles.modalItem} onPress={() => { setLocalSelecionado(item.id); setModalVisible(false); }}>
+                                  <Text style={styles.modalItemText}>{item.nome}</Text>
+                              </TouchableOpacity>
+                          )}
+                      />
+                  </View>
+              </Modal>
+            </>
+        )}
 
-          setHorario(formatted);
-        }}
-        keyboardType="numeric"
-        placeholder="Ex: 20:00"
-        placeholderTextColor="#fff"
-      />
+        <Text style={styles.label}>Data</Text>
+        <TextInput style={styles.input} value={data} editable={false} />
+        <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={async () => {
-          if (!nome || !localSelecionado || !data || !horario) {
-            alert('Preencha todos os campos!');
-            return;
-          }
+        {showCalendar && (
+            <Calendar onDayPress={(day: DateData) => { // Corrigido o tipo do 'day'
+                const dataSelecionada = new Date(day.dateString + 'T12:00:00');
+                const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionada); 
+                const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
+                setData(formatadoComInicialMaiuscula);
+                setShowCalendar(false);
+            }} />
+        )}
 
-          const local = locais.find(l => l.id === localSelecionado);
-
-          const novoEvento = {
-            id: Date.now().toString(),
-            nome,
-            local: local ? local.nome: '',
-            endereco: local ? local.endereco : '',
-            data,
-            horario,
-          };
-
-          await salvarEvento(novoEvento);
-
-          setNome('');
-          setLocalSelecionado(null);
-          setData('');
-          setHorario('');
-
-          router.back();
-        }}
-      >
-        <Text style={styles.saveButtonText}>Adicionar Evento</Text>
-      </TouchableOpacity>
-
+        <Text style={styles.label}>Horário</Text>
+        <TextInput
+            style={styles.input}
+            value={horario}
+            onChangeText={(text) => {
+                const cleanText = text.replace(/\D/g, ''); 
+                let formatted = cleanText;
+                if (cleanText.length > 2) {
+                  formatted = `${cleanText.slice(0, 2)}:${cleanText.slice(2, 4)}`;
+                }
+                setHorario(formatted);
+            }}
+            keyboardType="numeric"
+            placeholder="Ex: 20:00"
+            placeholderTextColor="#fff"
+        />
+        
+        <TouchableOpacity 
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+            onPress={handleAdicionarEvento}
+            disabled={isSaving}
+        >
+            {isSaving ? ( <ActivityIndicator color="#fff" /> ) : ( <Text style={styles.saveButtonText}>Adicionar Evento</Text> )}
+        </TouchableOpacity>
     </ScrollView> 
-
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -288,4 +231,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
+  saveButtonDisabled: { backgroundColor: '#999' }
 });
