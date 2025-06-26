@@ -216,16 +216,20 @@ export default function EditEventScreen() {
 
       <Modal visible={confirmModalVisible} transparent animationType="fade">
         <TouchableWithoutFeedback onPress={() => setConfirmModalVisible(false)}>
-          <View style={styles.confirmModalOverlay} />
-        </TouchableWithoutFeedback>
-        <View style={styles.confirmModalContent}>
-          <Text style={styles.confirmModalTitle}>Confirmar Exclusão</Text>
-          <Text style={styles.confirmModalMessage}>Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</Text>
-          <View style={styles.confirmModalButtons}>
-            <Button title="Cancelar" onPress={() => setConfirmModalVisible(false)} color="#999" />
-            <Button title="Excluir" onPress={executeDelete} color="red" />
+          <View style={styles.confirmModalOverlay}>
+            
+            <TouchableWithoutFeedback onPress={() => { /* Evita que o clique no conteúdo feche o modal */ }}>
+              <View style={styles.confirmModalContent}>
+                <Text style={styles.confirmModalTitle}>Confirmar Exclusão</Text>
+                <Text style={styles.confirmModalMessage}>Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</Text>
+                <View style={styles.confirmModalButtons}>
+                  <Button title="Cancelar" onPress={() => setConfirmModalVisible(false)} color="#999" />
+                  <Button title="Excluir" onPress={executeDelete} color="red" />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
     </ScrollView>
@@ -285,7 +289,7 @@ const styles = StyleSheet.create({
   },
   confirmModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fundo mais escuro para confirmação
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -293,8 +297,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 25,
     borderRadius: 10,
-    width: '80%', // Largura relativa
-    maxWidth: 350, // Largura máxima
+    width: '80%', 
+    maxWidth: 350, 
     alignItems: 'center',
   },
   confirmModalTitle: {

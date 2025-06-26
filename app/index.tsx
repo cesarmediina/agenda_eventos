@@ -98,7 +98,7 @@ export default function HomeScreen() {
       )}
 
       <Link href="/add_event" style={styles.addButton}>
-        <Text style={styles.addButtonText}>+ adicionar evento</Text>
+        <Text style={styles.addButtonText}> adicionar evento</Text>
       </Link>
     </View>
   );
