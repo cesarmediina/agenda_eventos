@@ -26,19 +26,16 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { nome_evento, data, horario, local_id } = req.body;
 
-  if (!nome_evento || !local_id) {
-    return res.status(400).json({ message: 'O nome do evento e o local são obrigatórios.' });
+  if (!nome_evento || !data || !horario || !local_id) {
+    return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
 
   try {
-    // --- LINHA DE CORREÇÃO ---
-    // Forçamos a string de data a ser interpretada como meia-noite em UTC.
-    const dataEmUTC = new Date(data + 'T00:00:00Z');
-
+    // Código CORRETO: Passa a string 'YYYY-MM-DD' diretamente.
+    // A variável PGTZ=UTC na Railway trata da conversão.
     const { rows } = await pool.query(
       'INSERT INTO eventos (nome_evento, data, horario, local_id) VALUES ($1, $2, $3, $4) RETURNING *;',
-      // Passamos o objeto de data corrigido para a query
-      [nome_evento, dataEmUTC, horario, local_id]
+      [nome_evento, data, horario, local_id] 
     );
     
     res.status(201).json(rows[0]);
@@ -74,14 +71,10 @@ router.put('/:id', async (req, res) => {
     }
 
     try {
-        // --- LINHA DE CORREÇÃO ---
-        // Aplicamos a mesma lógica aqui.
-        const dataEmUTC = new Date(data + 'T00:00:00Z');
-
+        // Código CORRIGIDO e CONSISTENTE: Passa a string 'YYYY-MM-DD' diretamente.
         const { rows } = await pool.query(
             'UPDATE eventos SET nome_evento = $1, data = $2, horario = $3, local_id = $4 WHERE id = $5 RETURNING *;', 
-            // Passamos o objeto de data corrigido para a query
-            [nome_evento, dataEmUTC, horario, local_id, id]
+            [nome_evento, data, horario, local_id, id]
         );
         
         if (rows.length === 0) {
