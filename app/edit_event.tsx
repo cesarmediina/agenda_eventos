@@ -218,7 +218,7 @@ export default function EditEventScreen() {
         <TouchableWithoutFeedback onPress={() => setConfirmModalVisible(false)}>
           <View style={styles.confirmModalOverlay}>
             
-            <TouchableWithoutFeedback onPress={() => { /* Evita que o clique no conteúdo feche o modal */ }}>
+            <TouchableWithoutFeedback onPress={() => { /* Evita que o clique no conteúdo feche modal */ }}>
               <View style={styles.confirmModalContent}>
                 <Text style={styles.confirmModalTitle}>Confirmar Exclusão</Text>
                 <Text style={styles.confirmModalMessage}>Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</Text>
