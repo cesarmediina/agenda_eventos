@@ -43,16 +43,25 @@ export default function EditEventScreen() {
   const formatarDataDoDBParaExibicao = (dateString: string) => {
     if (!dateString) return '';
     try {
-      const dateObj = new Date(dateString + 'T12:00:00');
-      if (isNaN(dateObj.getTime())) {
-        return "Data inválida";
-      }
-      const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+      // dateString vem no formato 'YYYY-MM-DD'
+      const [year, month, day] = dateString.split('-').map(Number);
+      
+      // Criamos a data usando Date.UTC para que ela represente o dia correto,
+      // independentemente do fuso horário do celular.
+      const dateObj = new Date(Date.UTC(year, month - 1, day));
+
+      const options: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        timeZone: 'UTC' // Garante que a formatação também use UTC
+      };
       const formattedDate = dateObj.toLocaleDateString('pt-BR', options);
       return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
     } catch (e) {
-      console.error("Erro ao formatar data do DB para exibição:", e);
-      return dateString;
+      console.error("Erro ao formatar data para exibição:", e);
+      return dateString; // Retorna a string original em caso de erro
     }
   };
 
@@ -179,15 +188,32 @@ export default function EditEventScreen() {
       <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
       {showCalendar && (
-          <Calendar onDayPress={(day: DateData) => {
-              const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
-              const dataFormatada = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
-              const formatadoComInicialMaiuscula = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1); 
-              
-              setDataParaExibicao(formatadoComInicialMaiuscula);
-              setDataParaDB(day.dateString);
-              setShowCalendar(false);
-          }} />
+          <Calendar onDayPress={(day: DateData) => {  
+          const dataParaDB = day.dateString; 
+
+          const [year, month, dayOfMonth] = dataParaDB.split('-').map(Number);
+          
+          const dateObjUTC = new Date(Date.UTC(year, month - 1, dayOfMonth));
+
+          
+          const options: Intl.DateTimeFormatOptions = {
+              weekday: 'long',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              timeZone: 'UTC' 
+          };
+          const dataFormatada = dateObjUTC.toLocaleDateString('pt-BR', options);
+          const dataFinalParaExibicao = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+
+          
+          setDataParaExibicao(dataFinalParaExibicao); 
+          
+          
+          setDataParaDB(dataParaDB);             
+
+          setShowCalendar(false);
+        }} />
       )}
 
       <Text style={styles.label}>Horário</Text>

@@ -131,17 +131,39 @@ export default function AddEventScreen() {
         <TextInput style={styles.input} value={dataParaExibicao} editable={false} /> 
         <Button title="Escolher Data" onPress={() => setShowCalendar(!showCalendar)} />
 
-        {showCalendar && (
-            <Calendar onDayPress={(day: DateData) => {
-                const dataSelecionadaParaExibicao = new Date(day.dateString + 'T12:00:00');
-                const dataFormatadaParaExibicao = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', }).format(dataSelecionadaParaExibicao); 
-                const formatadoComInicialMaiuscula = dataFormatadaParaExibicao.charAt(0).toUpperCase() + dataFormatadaParaExibicao.slice(1); 
-                
-                setDataParaExibicao(formatadoComInicialMaiuscula);
-                setDataParaDB(day.dateString); 
-                setShowCalendar(false);
-            }} />
-        )}
+{showCalendar && (
+    <Calendar 
+        onDayPress={(day: DateData) => {
+            
+            const dataParaDB = day.dateString;
+
+            
+            const [year, month, dayOfMonth] = dataParaDB.split('-').map(Number);
+            const dateObjUTC = new Date(Date.UTC(year, month - 1, dayOfMonth));
+
+            
+            const options: Intl.DateTimeFormatOptions = {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                timeZone: 'UTC' 
+            };
+            const dataFormatada = dateObjUTC.toLocaleDateString('pt-BR', options);
+            const dataParaExibicao = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+
+            
+            setDataParaExibicao(dataParaExibicao);
+            setDataParaDB(dataParaDB);
+
+            setShowCalendar(false);
+        }}
+        
+        markedDates={{
+            [dataParaDB]: { selected: true, selectedColor: '#000' }
+        }}
+    />
+)}
 
         <Text style={styles.label}>Horário</Text>
         <TextInput
