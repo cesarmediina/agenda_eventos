@@ -30,9 +30,11 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
 
+  const dataFormatada = data.split('T')[0]; // Garante que pega só a data
+
+
   try {
-    // Código CORRETO: Passa a string 'YYYY-MM-DD' diretamente.
-    // A variável PGTZ=UTC na Railway trata da conversão.
+    
     const { rows } = await pool.query(
       'INSERT INTO eventos (nome_evento, data, horario, local_id) VALUES ($1, $2, $3, $4) RETURNING *;',
       [nome_evento, data, horario, local_id] 
@@ -70,8 +72,10 @@ router.put('/:id', async (req, res) => {
         return res.status(400).json({ message: 'Todos os campos do evento são obrigatórios para atualização.' });
     }
 
+    const dataFormatada = data.split('T')[0]; // Garante que pega só a data
+
     try {
-        // Código CORRIGIDO e CONSISTENTE: Passa a string 'YYYY-MM-DD' diretamente.
+
         const { rows } = await pool.query(
             'UPDATE eventos SET nome_evento = $1, data = $2, horario = $3, local_id = $4 WHERE id = $5 RETURNING *;', 
             [nome_evento, data, horario, local_id, id]
