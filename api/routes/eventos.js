@@ -30,7 +30,8 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
 
-  const dataFormatada = data.split('T')[0]; // Garante que pega só a data
+  const dataISO = new Date(data);
+  const dataFormatada = dataISO.toISOString().split('T')[0];
 
 
   try {
@@ -72,7 +73,9 @@ router.put('/:id', async (req, res) => {
         return res.status(400).json({ message: 'Todos os campos do evento são obrigatórios para atualização.' });
     }
 
-    const dataFormatada = data.split('T')[0]; // Garante que pega só a data
+    const dataISO = new Date(data);
+    const dataFormatada = dataISO.toISOString().split('T')[0];
+
 
     try {
 
